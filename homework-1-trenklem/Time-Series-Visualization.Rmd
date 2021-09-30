@@ -1,0 +1,332 @@
+---
+title: "Homework 1 - Time Series Visualization"
+author: "Prof. Dr. Stephan Trahasch"
+date: 'Submission date: 17.12.2020'
+output:
+  html_document:
+    theme: cerulean
+    css: styles/homework.css
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '3'
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+options(digits = 5)
+
+# libraries to load
+library(fpp3)
+library(fpp2) 
+```
+
+# Exercise 1
+Use the help menu to explore what the series `gold`, `woolyrnq` and `gas` represent. These are available in the `forecast` package.
+
+```{r, echo=TRUE, cache=TRUE, eval=FALSE}
+help(gold)
+# to do
+help(woolyrnq)
+help(gas)
+```
+
+Use `autoplot` to plot each of these in separate plots.
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(gold)
+autoplot(woolyrnq)
+autoplot(gas)
+
+```
+
+**What is the frequency of each commodity series?**
+Hint: apply the `frequency()` function.
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+frequency(gold)
+#1
+frequency(woolyrnq)
+#4
+frequency(gas)
+#12
+```
+
+Use `which.max()` to spot the outlier in the `gold` series. 
+**Which observation was it?**
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+which.max(gold)
+#770
+```
+
+# Exercise 2 
+
+Import the file `tute1.csv` from the folder data and review its contents. You should find four columns of information. Columns B through D each contain a quarterly series, labelled Sales, AdBudget and GDP. Sales contains the quarterly sales for a small company over the period 1981-2005. AdBudget is the advertising budget and GDP is the gross domestic product. All series have been adjusted for inflation.
+
+You can read the data into R with the following script:
+
+```{r, echo=TRUE, cache=TRUE}
+tute1 <- read.csv("data/tute1.csv", header = TRUE)
+View(tute1)
+```
+
+We convert the data to time series. The `[,-1]` removes the first column which contains the quarters as we don't need them now.
+
+```{r, echo=TRUE, cache=TRUE}
+mytimeseries <- ts(tute1[, -1], start = 1981, frequency = 4)
+```
+
+Construct time series plots of each of the three series and use 'facets = TRUE' .
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(mytimeseries, facets = TRUE)
+# one y axis for each column
+```
+
+Check what happens when you don't include `facets=TRUE`.
+
+```{r, echo=TRUE, cache=TRUE, dependson="exmyts"}
+# to do
+autoplot(mytimeseries)
+# all columns in one chart with one y axis
+```
+
+# Exercise 3
+
+Import some monthly Australian retail data from the foler data. These represent retail sales in various categories for different Australian states, and are stored in a MS-Excel file.
+
+You can read the data into R with the following script:
+
+```{r, echo=TRUE, cache=TRUE}
+retaildata <- readxl::read_excel("data/retail.xlsx", skip = 1)
+```
+
+The second argument (`skip=1`) is required because the Excel sheet has two header rows.
+
+Select one of the time series as follows (but replace the column name with your own chosen column):
+
+```{r, echo=TRUE, cache=TRUE}
+myts <- ts(retaildata[, "A3349627V"], frequency = 12, start = c(1982, 4))
+```
+
+Explore your chosen retail time series using the following functions: `autoplot`, `ggseasonplot`, `ggsubseriesplot`, `gglagplot`, `ggAcf`
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(myts)
+ggseasonplot(myts)
+ggsubseriesplot(myts)
+gglagplot(myts)
+ggAcf(myts)
+
+```
+
+**Can you spot any seasonality, cyclicity and trend? What do you learn about the series?**
+
+Your answer:
+Es lässt sich eine Saisonalität sowie ein Trend feststellen. 
+Alle 12 Monate gibt es einen Peak. 
+Das ACF Plot zeigt, dass der Umsatz zu nimmt.
+
+# Exercise 4
+Create time plots of the following time series: goog, writing, fancy, a10, h02.
+
+    + Use `help()` to find out about the data in each series.
+    + For the `goog` plot, modify the axis labels and title.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# to do
+autoplot(goog)+
+xlab("Time") + ylab("Stock price") +
+  ggtitle("Daily closing stock prices of Google Inc")
+autoplot(writing)
+autoplot(fancy)
+autoplot(a10)
+autoplot(h02)
+```
+
+Use the `ggseasonplot` and `ggsubseriesplot` functions to explore the seasonal patterns in the following time series:  `writing`, `fancy`, `a10`, `h02`.
+
+- What can you say about the seasonal patterns?
+- Can you identify any unusual years?
+
+
+```{r, echo=TRUE}
+# writing
+# to do
+ggseasonplot(writing)
+ggsubseriesplot(writing)
+
+```
+
+Your answer:
+Immer im August gibt es einen starken Einbruch (Saisonal). Es lassen sich keine ungewöhnlichen Jahre feststellen.
+
+```{r, echo=TRUE}
+# fancy
+# to do
+help("fancy")
+ggseasonplot(fancy)
+ggsubseriesplot(fancy)
+# 
+```
+
+Your answer:#
+Immer im Dezember gibt es einen starken Anstieg (Saisonal). Die Jahre 1992 und 1993 verzeichnen einen besonders starken Anstieg im Dezember.
+
+```{r, echo=TRUE}
+# a10
+# to do
+help(a10)
+ggseasonplot(a10)
+ggsubseriesplot(a10)
+# 
+
+```
+
+Your answer:
+Für das Jahr 2008 gibt es einen starken Einbruch im Jun/Jul. Eventuell ist die Farbskala hier verwirrend und Jul-Dez stellen 1991 dar und Jan bis Jun 2008. Die Jahre 2006-2008 unterliegen starken Schwankungen. Eine Saisonalität lässt sich für Jan/Feb erahnen. Hier findet ein starker Abfall der Geraden statt.
+
+```{r, echo=TRUE}
+# h02
+# to do
+help(h02)
+ggseasonplot(h02)
+ggsubseriesplot(h02)
+# 
+```
+
+Your answer:
+Eine Saisonalität lässt sich für Jan/Feb erkennen. Es findet ein starkter Abfall der Geraden statt. Es lassen sich keine ungewöhnlichen Jahre erkennen
+
+# Exercise 5
+Use the following graphics functions: `autoplot`, `ggseasonplot`, `ggsubseriesplot`, `gglagplot`, `ggAcf` and explore features from the following time series: `hsales`, `usdeaths`, `bricksq`, `sunspotarea`, `gasoline`.
+
+    + Can you spot any seasonality, cyclicity and trend?
+    + What do you learn about the series?
+
+Example for hsales:
+
+```{r, echo=TRUE, cache=TRUE}
+help(hsales)
+autoplot(hsales)
+ggseasonplot(hsales)
+ggsubseriesplot(hsales)
+gglagplot(hsales)
+ggAcf(hsales)
+```
+
+  + Seasonality evident in all plots
+  + Cyclicity seen in first two plots
+  + No trend
+  + ACF only shows seasonality. Cycle length too long to show up here.
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(usdeaths)
+ggseasonplot(usdeaths)
+ggsubseriesplot(usdeaths)
+gglagplot(usdeaths)
+ggAcf(usdeaths)
+
+```
+
+Your answer:
++ Saisonalität alle 12 Monate.
++ Es ist kein Trend erkennbar.
++ Das Seasonplot zeigt einen Peak für Juli.
+
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(bricksq)
+ggseasonplot(bricksq)
+ggsubseriesplot(bricksq)
+gglagplot(bricksq)
+ggAcf(bricksq)
+```
+
+Your answer:
++ Das ACF Plot zeigt einen Trend.
++ Das ACF Plot zeigt eine Saisonalität alle 4 Monate. Im Lagplot ist diese nicht so eindeutig erkennbar.
++ Das Auto Plot zeigt eine Zyklizität. Auf den anderen Plots ist diese nicht zu erkennen.
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(sunspotarea)
+#ggseasonplot(sunspotarea) Fehler in ggseasonplot(sunspotarea) : Data are not seasonal
+#ggsubseriesplot(sunspotarea) Fehler in ggsubseriesplot(sunspotarea) : Data are not seasonal
+gglagplot(sunspotarea)
+ggAcf(sunspotarea)
+
+```
+
+Your answer:
+
++ Es ist kein Trend erkennbar.
++ Das ACF Plot zeigt eine Saisonalität. Das gglagplot zeigt eine negative Korrelation für Lag 5 und 6.
++ Eine Zyklizität ist nicht erkennbar.
+
+```{r, echo=TRUE, cache=TRUE}
+# to do
+autoplot(gasoline)
+ggseasonplot(gasoline)
+#ggsubseriesplot(gasoline) Fehler in ggsubseriesplot(gasoline) : Each season requires at least 2 observations. This may be caused from specifying a time-series with non-integer frequency.
+gglagplot(gasoline)
+ggAcf(gasoline)
+
+```
+
+Your answer:
+
++ Das ACF Plot zeigt einen Trend
++ Das ACF Plot lässt ebenfalls eine Zyklizität erahnen. 
++ Eine Saisonalität ist nicht erkennbar
+
+
+# Exercise 6
+
+The `pigs` data shows the monthly total number of pigs slaughtered in Victoria, Australia, from Jan 1980 to Aug 1995. Use `mypigs <- window(pigs, start=1990)` to select the data starting from 1990. Use `autoplot` and `ggAcf` for `mypigs` series and compare these to white noise plots.
+
+```{r, echo=TRUE, cache=TRUE}
+# White noise
+set.seed(1711)
+y <- ts(rnorm(50))
+autoplot(y) + ggtitle("White noise")
+```
+
+```{r}
+ggAcf(y)
+```
+
+
+```{r, echo=TRUE, cache=TRUE}
+# todo
+mypigs <- window(pigs, start=1990)
+autoplot(mypigs)
+ggAcf(mypigs)
+```
+
+Your answer:
+Das white noise Plot und das "mypigs" Plot ähneln sich sehr. Allerdings zeigt das ACF plot eine relevante Autokorrelation für Lag 1-3. Das white noise plot hat keine relevante Autokorrelation. Das "mypigs" Datenset ist demnach nicht als white noise anzusehen.
+
+# Exercise 7
+
+`dj` contains 292 consecutive trading days of the Dow Jones Index. Use `ddj <- diff(dj)` to compute the daily changes in the index. Plot `ddj` and its ACF. Do the changes in the Dow Jones Index look like white noise?
+
+```{r}
+# todo
+ddj <- diff(dj)
+autoplot(ddj)
+ggAcf(ddj)
+
+```
+
+Your answer:
+Die Daten sehen wie white noise aus. Das ACF Plot zeigt, dass die AUtokorrelation innerhalb der Limits liegt (blaue Schranke). Lediglich Lag 6 zeigt eine relevante Autokorrelation.

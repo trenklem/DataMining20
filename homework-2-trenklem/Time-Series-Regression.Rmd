@@ -1,0 +1,441 @@
+---
+title: "Homework 2 - Time Series Regression"
+author: "Prof. Dr. Stephan Trahasch"
+date: 'Submission date: 14.01.2021'
+output:
+  html_document:
+    theme: cerulean
+    css: styles/homework.css
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  word_document:
+    toc: yes
+    toc_depth: '3'
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+options(digits = 5)
+
+# libraries to load
+library(fpp2)
+library(fpp3)
+```
+
+# Exercise 1
+Daily electricity demand for Victoria, Australia, during 2014 is contained in `elecdaily`. The data for the first 20 days can be obtained as follows.
+
+```{r echo=TRUE, cache=TRUE}
+daily20 <- head(elecdaily,20)
+```
+
+## Plot the data and find the regression model 
+Plot the data and find the regression model for Demand with temperature as an explanatory variable. 
+Why is there a positive relationship?
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+autoplot(daily20)
+```
+
+```{r}
+# todo
+
+daily20_t <- daily20 %>%    # TS object
+  as_tsibble(pivot_longer = FALSE) 
+
+fit <- tslm(Demand ~ Temperature, data=daily20)
+fit
+
+# Your answer: 
+# Der Demand korreliert mit der Temperature. Dies könnte sein, weil dann viele Klimaanlagen in Betrieb sind.
+```
+
+A scatter plot of Demand against Temperature is shown below with the estimated regression line. This graph shows the positive relationship a lot more clearly.
+
+```{r}
+# todo 
+daily20_t %>%
+  as_tibble() %>%
+  ggplot(aes(x=Demand, y=Temperature)) +
+  ylab("Temperature") +
+  xlab("Demand") +
+  geom_point() + geom_smooth(method="lm", se=FALSE)
+
+```
+
+
+## Produce a residual plot. 
+Is the model adequate? 
+What is a Breusch-Godfrey test?
+Are there any outliers or influential observations?
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+residuals <- checkresiduals(fit)
+residuals
+
+# Die residuals korrelieren nicht miteinander. Es sind keine Außreißer zu erkennen. Das Model scheint adequat zu sein.
+
+```
+
+## Forecast the electricity demand
+Use the model to forecast the electricity demand that you would expect for the next day if the maximum temperature was $15^\circ$ and compare it with the forecast if the with maximum temperature was $35^\circ$. Do you believe these forecasts?
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+newdata=data.frame(Temperature =c(15,35))
+fc <- forecast(fit, newdata = newdata )
+summary(fc)
+
+```
+
+## Give prediction intervals for your forecasts.
+
+
+```{r}
+
+fc$upper
+fc$lower
+fc
+
+```
+
+
+## Plot Demand vs Temperature 
+Plot Demand vs Temperature for all of the available data in `elecdaily`. 
+What does this say about your model?
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+elecdaily %>%
+  as_tibble() %>%
+  ggplot(aes(x=Demand, y=Temperature)) +
+  ylab("Temperature") +
+  xlab("Demand") +
+  geom_point() + geom_smooth(method="lm", se=FALSE)
+
+
+autoplot(elecdaily %>% as_tsibble())
+
+# Es gibt keinen linearen Zusammenhang zwischen Temperature und Demand. Das erzeugte Model ist nicht zuverlässig.
+```
+
+# Exercise 2
+
+Data set `mens400` contains the winning times (in seconds) for the men's 400 meters final in each Olympic Games from 1896 to 2016.
+
+## Plot the winning time against the year. 
+Describe the main features of the scatterplot.
+
+```{r, warning=FALSE, message=FALSE}
+# todo
+mens400 %>%
+  as_tsibble() %>%
+   ggplot(aes(x=index, y=value)) +
+  ylab("value") +
+  xlab("index") +
+  geom_point() + geom_smooth(method="lm", se=FALSE)
+
+autoplot(mens400)
+
+# Es gibt fehlende Werte für die beiden Zeiträume der beiden Weltkriege. Hier haben keine Olypischen Spiele stattgefunden.
+# Die Zeiten haben einen negativen Trend und werden immer geringer.
+
+```
+
+## Fit a regression line to the data. 
+Obviously the winning times have been decreasing, but at what *average* rate per year?
+
+```{r mens400, warning=FALSE, message=FALSE}
+# todo
+year <- time(mens400)
+fit_2 <- tslm(mens400 ~ year)
+coefficients(fit_2)[2]
+# Das durchschnittliche Wachstum ist -0.064574 pro Jahr
+```
+
+The average change per year is `r round(coefficients(fit)['timetrend'], 3)`  second per year.
+
+
+## Plot the residuals against the year. 
+What does this indicate about the suitability of the fitted line?
+
+```{r, warning=FALSE, message=FALSE, dependson='mens400'}
+# todo
+cbind(year,
+      Residuals = fit_2$residuals) %>%
+  as.data.frame() %>%
+  ggplot(aes(x = year, y = Residuals)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE) +
+  ylab("Residuals")
+
+checkresiduals(fit_2)
+
+# Das Lag Plot zeigt, dass in den Residuals noch Informationen verblieben sind. Das ACF Plot zeigt dies besonders für Lag 0-2.
+# Dies bedeutet, dass unser Modell noch nicht adequat ist.
+
+```
+
+## Predict the winning time for the mens 400 meters final in the 2020 Olympics. 
+Give a prediction interval for your forecasts. What assumptions have you made in these calculations?
+
+```{r, dependson='mens400'}
+# todo
+
+newdata=data.frame(year=c(2020))
+fc_2 <- forecast(fit_2, newdata = newdata)
+fc_2$upper
+fc_2$lower
+fc_2
+
+# Es wurde angenommen, dass die Rediduals eine Normalverteilung darstellen.
+
+```
+
+# Exercise 3
+
+The data set `fancy` concerns the monthly sales figures of a shop which opened in January 1987 and sells gifts, souvenirs, and novelties. The shop is situated on the wharf at a beach resort town in Queensland, Australia. The sales volume varies with the seasonal population of tourists. There is a large influx of visitors to the town at Christmas and for the local surfing festival, held every March since 1988. Over time, the shop has expanded its premises, range of products, and staff.
+
+## Produce a time plot of the data and describe the patterns in the graph. 
+Identify any unusual or unexpected fluctuations in the time series.
+
+```{r}
+# todo
+autoplot(fancy)
+ggseasonplot(fancy)
+ggsubseriesplot(fancy)
+gglagplot(fancy)
+ggAcf(fancy)
+
+# Features of the data:
+# Die Daten zeigen Saisonales und Zyklischen Verhalten sowie einen positiven Trend.
+
+
+```
+
+## Explain why it is necessary to take logarithms of these data before fitting a model.
+
+The last feature above suggests taking logs to make the pattern (and variance) more stable
+
+```{r}
+# todo
+# Taking logarithms of the data
+fancy_log = log(fancy)
+autoplot(fancy_log)
+
+# Der Trend wird durch den logarithmus linearer und besser interpretierbar. Die Zyklität und die Saisonalität werden konstanter.
+
+```
+
+## Use R to fit a regression model to the logarithms of these sales data with a linear trend, seasonal dummies and a "surfing festival" dummy variable.
+
+```{r}
+# todo
+#Create festival dummy:
+
+surfing <- c()
+for(i in 1:length(time(fancy))){
+  month <- round(12*(time(fancy)[i] - floor(time(fancy)[i]))) + 1
+  year <- floor(time(fancy)[i])
+  if(year >= 1988 & month == 3){
+    surfing[i] <- 1
+  } else {
+    surfing[i] <- 0
+  }
+}
+
+
+
+
+# Fit linear model to logged data (by specifying lambda=0)
+
+fit_3 <- tslm(BoxCox(fancy, lambda=0) ~ trend + season + surfing, data=fancy)
+
+# Check fitted values
+fit_3
+
+```
+
+## Plot the residuals against time and against the fitted values. Do these plots reveal any problems with the model?
+
+```{r, message=FALSE}
+# todo
+checkresiduals(fit_3)
+
+# Das ACF Plot zeigt eine Korrelation zwischen den Residuals
+
+```
+
+
+## Do boxplots of the residuals for each month. 
+Does this reveal any problems with the model?
+
+```{r, message=FALSE}
+# todo
+boxplot(fit_3$residuals)
+
+# Das Boxplot zeigt keine Probleme mit dem Model
+```
+
+
+
+## What do the values of the coefficients tell you about each variable?
+
+```{r}
+coefficients(fit_3)
+
+# Solution:
+# Das Modell zeigt einen positiven Trend. Die Sales steigen über die Zeit. Alle Coefficients sind positiv. Die Sales waren im Januar am niedrigsten.
+# Das surfing Event hat mit einem Coefficient von 0.50152 einen positiven Effenkt auf die Sales im März.
+```
+
+## Use your regression model to predict the monthly sales for 1994, 1995, and 1996. 
+Produce prediction intervals for each of your forecasts.
+
+```{r}
+# todo
+newdata <- c(rep(0, 36))
+fc_3 <- forecast(fit_3, newdata = newdata)
+fc_3$upper
+fc_3$lower
+fc_3
+
+```
+
+Transform your predictions and intervals to obtain predictions and intervals for the raw data.
+This was done automatically because we used `lambda=0` inside `tslm`.
+
+## How could you improve these predictions by modifying the model?
+
+* Es kann ein anderer lambda Wert für die Boxcox Transformation gewählt werden.
+
+# Exercise 4
+
+The `gasoline` series consists of weekly data for supplies of US finished motor gasoline product, from 2 February 1991 to 20 January 2017. The units are in "thousand barrels per day". Consider only the data to the end of 2004.
+
+## Fit a harmonic regression with trend to the data. 
+Select the appropriate number of Fourier terms to include by minimizing the AICc or CV value.
+
+```{r}
+# todo
+gasoline_2004 <- window(gasoline, end=2004)
+fit_4_1 <- tslm(gasoline_2004~trend + fourier(gasoline_2004, K=3))
+fit_4_2 <- tslm(gasoline_2004~trend + fourier(gasoline_2004, K=5))
+fit_4_3 <- tslm(gasoline_2004~trend + fourier(gasoline_2004, K=6))
+fit_4_4 <- tslm(gasoline_2004~trend + fourier(gasoline_2004, K=7))
+fit_4_5 <- tslm(gasoline_2004~trend + fourier(gasoline_2004, K=10))
+
+plot.ts(gasoline_2004, fit_4_1$fitted.values)
+plot.ts(gasoline_2004, fit_4_2$fitted.values)
+plot.ts(gasoline_2004, fit_4_3$fitted.values)
+plot.ts(gasoline_2004, fit_4_4$fitted.values)
+plot.ts(gasoline_2004, fit_4_5$fitted.values)
+
+AIC(fit_4_1)
+AIC(fit_4_2)
+AIC(fit_4_3)
+AIC(fit_4_4)
+AIC(fit_4_5)
+
+# Der AIC Wert für fit_4_4 mit K=7 ist am geringsten
+
+
+```
+
+## Check the residuals of the final model using the `checkresiduals()` function. 
+Even though the residuals fail the correlation tests, the results are probably not severe enough to make much difference to the forecasts and forecast intervals. (Note that the correlations are relatively small, even though they are significant.)
+
+```{r}
+checkresiduals(fit_4_4)
+
+# Zwar zeugt das ACF Plot eine Korrelation, die Werte sind jedoch so gering, dass sie keinen Einfluss auf den forecast haben sollten. Die Verteilung der redisiduals entspricht einer Normalverteilung.
+```
+
+To forecast using harmonic regression, you will need to generate the future values of the Fourier terms. This can be done as follows.
+>
+>   ```r
+>   fc <- forecast(fit, newdata=fourier(x, K, h))
+>   ```
+>
+>    where `fit` is the fitted model using `tslm`, `K` is the number of Fourier terms used in creating `fit`, and `h` is the forecast horizon required.
+>
+>    Forecast the next year of data.
+
+```{r, warning=FALSE}
+# todo
+fc_4 <- forecast(fit_4_4, newdata=fourier(gasoline_2004, 7, 52))
+autoplot(fc_4)
+
+```
+
+## Plot the forecasts along with the actual data for 2005. What do you find?
+
+```{r}
+# todo
+gasoline_2005 <- window(gasoline, end=2005)
+autoplot(fc_4)+
+  autolayer(window(
+    gasoline_2005
+  ))
+
+# Die Daten für 2005 liegen in den prediction intervals des forecasts
+
+```
+
+
+
+# Exercise 5
+
+Data set `huron` gives the level of Lake Huron in feet from 1875 to 1972.
+
+## Plot the data and comment on its features.
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+autoplot(huron)
+gglagplot(huron)
+ggAcf(huron)
+
+# Die Daten zeigen ein Zyklischen Verhalten. Bis ca 1925 gibt es einen Abwärtstrend. Danach einen leichten Aufwärtstrend.
+
+```
+
+
+## Fit a linear regression and compare this to a piecewise linear trend model with a knot at 1915.
+
+```{r echo=TRUE, cache=TRUE}
+# todo 
+fit_5 <- huron %>%
+  as_tsibble() %>%
+  model(
+    # Linear trend
+    linear = TSLM(value ~ trend()),
+    # Piecewise linear trend
+    piecewise = TSLM(value ~ trend(knots = c(1915)))
+  )
+```
+
+
+
+## Generate forecasts from these two models for the period upto 1980 and comment on these.
+
+```{r echo=TRUE, cache=TRUE}
+# todo
+
+fc_5 = fit_5 %>% forecast(h=10)
+
+autoplot(huron) +
+  autolayer(fitted(fit_5)) +
+  autolayer(fc_5) +
+  xlab("Year") + ylab("Water Level") +
+  ggtitle("Water level Forecast") +
+  guides(colour = guide_legend(title = " "))
+
+# Die piecewise Linie passt besser auf die Daten, da sie den Anfänglichen negativen Trend abbildet und ab 1915 einen neutralen Trend zeigt
+# Die lineare Linie zeigt einen konstanten negativen Trend was nicht zu den Daten passt
+
+```
+
+

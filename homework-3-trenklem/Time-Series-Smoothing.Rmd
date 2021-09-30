@@ -1,0 +1,97 @@
+---
+title: "Homework 3 - Time Series ETS"
+author: "Prof. Dr. Stephan Trahasch"
+date: 'Submission date: 28.01.2021'
+params:
+  datadir: ../data/
+output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  html_document:
+    theme: cerulean
+    css: styles/homework.css
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+options(digits = 5)
+
+# libraries to load
+library(fpp2)
+library(fpp3)
+```
+
+# Exercise 1 - Sales of paperback books
+Data set `books` contains the daily sales of paperback and hardcover books at the same store. The task is to forecast the next four days sales for paperback and hardcover books.
+
+Plot the series and discuss the main features of the data.
+
+```{r}
+# todo
+autoplot(books)
+```
+
+Your answer:
+
+Beide Zeitreihen zeigen einen positiven Trend. Sie haben einen ähnlichen Verlauf. Es lässt sich keine Zyklität oder Saisonalität erkennen. 
+
+Both series are trended, with a similar slope. There is no obvious weekly seasonality.
+
+
+```{r}
+hardcover <- books %>% as_tsibble(pivot_longer = FALSE) %>% select(Hardcover)
+paperback <- books %>% as_tsibble(pivot_longer = FALSE) %>% select(Paperback)
+```
+
+Compare the forecasting performance of the  exponential smoothing methods SES and Holt to the paperback series.
+
+```{r}
+# todo
+fit <- paperback %>%
+  model(
+    ses = ETS(Paperback ~ error("A") + trend("N") + season("N")),
+    holt = ETS(Paperback ~ error("A") + trend("A") + season("N"))
+    )
+report(fit)
+```
+
+
+```{r}
+# Forecast 4 days
+# todo
+
+fc = fit %>% forecast(h=4)
+```
+  
+Plot the 4 day forecasts for hardcover.
+
+```{r}
+# todo 
+
+autoplot(paperback) + autolayer(fc)
+
+```
+
+Discuss the merits of the two forecasting methods. 
+Compare the forecasts for the series using both methods. Which do you think is best?
+
+
+```{r}
+# to do 
+# calculate accuracy of training data
+accuracy(fit)
+```
+Your answer:
+Das "holt" Modell liefert leicht bessere Metriken. Der RMSE und MAE Wert sind deutlicht besser. Der MAPE Wert ist nahezu identisch.
+Der forecast des "holt" Modell ist besser geeignet. Er bezieht den Trend der Daten mit ein. Beide Modelle beziehen die vorherigen Daten gut ein.
+
+
+```{r}
+# plot components of model
+# todo
+components(fit) %>% autoplot()
+
+```
